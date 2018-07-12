@@ -1,13 +1,13 @@
-var express = require('express');
-var app = express();
-var port = process.env.PORT || 3000; 
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000; 
 
 app.listen(port);
 app.get('/api/newround', function(req, res) {
-	var user_id = req.param('id');
-	var wager = req.param('wager');
-	var userPicks = req.param('picks');
-	var result = processRound(user_id, userPicks, wager);
+	const user_id = req.param('id');
+	const wager = req.param('wager');
+	const userPicks = req.param('picks');
+	const result = processRound(user_id, userPicks, wager);
 	if(result.error){
 		res.send('input error');
 	} else {
@@ -15,25 +15,29 @@ app.get('/api/newround', function(req, res) {
 	}
 });
 function processRound(user_id, userPicks, wager) {
-	var drawID = (new Date().valueOf()) + user_id;
-	var draw = new Set([]);
-	var picks  = userPicks.split(',').map(Number);
-	var newpicks = new Set(picks.filter((obj) => obj));
-	if (newpicks.size < 5 || newpicks.size > 10) {return {error: true};}
-	while(draw.size < 20){
-		draw.add(Math.floor((Math.random() * 80) + 1)); 
+	const userSet = new Set(processInput(userPicks));
+	if (userSet.size < 5 || userSet.size > 10 || !(wager>0) || !(user_id>0)) {
+		return {error: true};
 	}
-	const matches = new Set([...newpicks].filter(i => draw.has(i)));
-	const winner = (matches.size > 0);
+	let drawNumbers = new Set([]);
+	while(drawNumbers.size < 20){
+		drawNumbers.add(Math.floor((Math.random() * 80) + 1)); 
+	}
+	const matches = new Set([...userSet].filter(i => drawNumbers.has(i)));
 	return {
-		drawID: drawID,
+		drawID: (new Date().valueOf()) + user_id,
 		user_id: user_id,
-		winner: winner,
+		winner: (matches.size > 0),
 		wager: wager,
 		winnings: (matches.size ) * wager,
-		drawPicks: [...draw],
-		userPicks: [...newpicks],
+		drawPicks: [...drawNumbers],
+		userPicks: [...userSet],
 		matches: [...matches],
 		time: Date.now()
 	};
+}
+function processInput(userPicks){
+	userPicks  = userPicks.split(',').map(Number);
+	return userPicks.filter((obj) => obj)
+		.filter((x) => {return x<=80 && x>=1;});
 }
