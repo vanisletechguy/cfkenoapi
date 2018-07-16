@@ -1,12 +1,12 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000; 
+const port = process.env.PORT || 3002; 
 
 app.listen(port);
 app.get('/api/newround', function(req, res) {
-	const user_id = req.param('id');
-	const wager = req.param('wager');
-	const userPicks = req.param('picks');
+	const user_id = req.query['id'];
+	const wager = req.query['wager'];
+	const userPicks = req.query['picks'];
 	const result = processRound(user_id, userPicks, wager);
 	if(result.error){
 		res.send('input error');
